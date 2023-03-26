@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(cors());
 
 app.get("/", (res, req) => {
-  res.setEncoding("Hello world");
+  res.send("Hello world");
 });
 app.use("/api/user", require("./models/user.routes"));
 
