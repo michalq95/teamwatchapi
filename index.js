@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.get("/", (res, req) => {
+app.get("/", (req, res) => {
   res.send("Hello world");
 });
 app.use("/api/user", require("./models/user.routes"));
