@@ -12,6 +12,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+app.get("/", (res, req) => {
+  res.setEncoding("Hello world");
+});
 app.use("/api/user", require("./models/user.routes"));
 
 const port = 5000;
