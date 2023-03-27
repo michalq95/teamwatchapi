@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const io = require("./socket");
 const cors = require("cors");
+var history = require("connect-history-api-fallback");
 
 const connectDB = require("./db.js");
 
@@ -11,6 +12,7 @@ connectDB();
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use(history());
 
 app.get("/", (req, res) => {
   res.send("Hello world");
