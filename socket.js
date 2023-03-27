@@ -2,6 +2,12 @@ const socketio = require("socket.io");
 const io = socketio({ cors: { origin: "*" } });
 const { getRoomByName, createOrJoinRoom, addVideo } = require("./roomStore");
 const axios = require("axios");
+const { RateLimiterMemory } = require("rate-limiter-flexible");
+
+const rateLimiter = new RateLimiterMemory({
+  points: 3, // 3 points
+  duration: 1, // per second
+});
 
 io.use(async (socket, next) => {
   socket.username = socket.handshake.auth.username;
@@ -18,28 +24,43 @@ io.on("connection", async (socket) => {
     username: socket.username,
   });
 
-  socket.on("track:play", (data) => {
-    socket.to(data.to).emit("track:play");
-  });
-
-  socket.on("track:pause", (data) => {
-    socket.to(data.to).emit("track:pause");
-  });
-
-  socket.on("track:switch", ({ playlistData, to }) => {
-    let room = getRoomByName(to);
-    room.playlist = playlistData.playlist;
-
-    if (playlistData.currentIndex >= room.playlist.length) {
-      room.currentIndex = 0;
-    } else {
-      room.currentIndex = playlistData.currentIndex;
+  socket.on("track:play", async (data) => {
+    try {
+      await rateLimiter.consume(socket.handshake.address);
+      socket.to(data.to).emit("track:play");
+    } catch (rejRes) {
+      socket.emit("blocked", { "retry-ms": rejRes.msBeforeNext });
     }
+  });
 
-    room.currentVideo = room.playlist[room.currentIndex];
-    socket.emit("track:switch", room);
+  socket.on("track:pause", async (data) => {
+    try {
+      await rateLimiter.consume(socket.handshake.address);
+      socket.to(data.to).emit("track:pause");
+    } catch (rejRes) {
+      socket.emit("blocked", { "retry-ms": rejRes.msBeforeNext });
+    }
+  });
 
-    socket.to(to).emit("track:switch", room);
+  socket.on("track:switch", async ({ playlistData, to }) => {
+    try {
+      await rateLimiter.consume(socket.handshake.address);
+      let room = getRoomByName(to);
+      room.playlist = playlistData.playlist;
+
+      if (playlistData.currentIndex >= room.playlist.length) {
+        room.currentIndex = 0;
+      } else {
+        room.currentIndex = playlistData.currentIndex;
+      }
+
+      room.currentVideo = room.playlist[room.currentIndex];
+      socket.emit("track:switch", room);
+
+      socket.to(to).emit("track:switch", room);
+    } catch (rejRes) {
+      socket.emit("blocked", { "retry-ms": rejRes.msBeforeNext });
+    }
   });
 
   socket.on("track:add", ({ video, videoName, to }) => {
