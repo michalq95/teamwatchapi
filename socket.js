@@ -82,12 +82,18 @@ io.on("connection", async (socket) => {
   socket.on("track:seek", ({ seekToTime, to }) => {
     socket.to(to).emit("track:seek", { seekToTime });
   });
-  socket.on("room", ({ index, to }) => {
+  socket.on("track:remove", ({ index, to }) => {
     let room = getRoomByName(to);
     // room.playlist = playlistData.playlist;
     room.playlist = room.playlist
       .slice(0, index)
       .concat(room.playlist.slice(index + 1));
+    socket.emit("room", room);
+    socket.to(to).emit("room", room);
+  });
+  socket.on("room", async ({ playlistData, to }) => {
+    let room = getRoomByName(to);
+    room.playlist = playlistData.playlist;
     socket.emit("room", room);
     socket.to(to).emit("room", room);
   });
