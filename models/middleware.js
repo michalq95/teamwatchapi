@@ -3,6 +3,7 @@ const asyncHandler = require("express-async-handler");
 const User = require("./user");
 
 exports.protect = asyncHandler(async (req, res, next) => {
+  console.log("protect");
   let token;
   if (
     req.headers.authorization &&
@@ -15,6 +16,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
   if (!token) {
     res.status(401).json({ message: "Not authorized" });
   }
+  console.log(token);
   try {
     const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
     req.user = await User.findById(decodedToken.id);
