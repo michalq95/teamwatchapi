@@ -3,6 +3,7 @@ const io = socketio({ cors: { origin: "*" } });
 const { getRoomByName, createOrJoinRoom, addVideo } = require("./roomStore");
 const axios = require("axios");
 const { RateLimiterMemory } = require("rate-limiter-flexible");
+const asyncHandler = require("express-async-handler");
 
 const rateLimiter = new RateLimiterMemory({
   points: 3, // 3 points
@@ -63,19 +64,45 @@ io.on("connection", async (socket) => {
     }
   });
 
-  socket.on("track:add", ({ video, videoName, to }) => {
+  socket.on("track:add", async ({ video, videoName, to }) => {
     if (video) {
       let videoLink = video;
       let room = getRoomByName(to);
-      //should verify if valid youtube video
-      //and name should be also taken from API
+      let match = videoLink.match(/&list=([^&]*)/);
+      let playlistName = match ? match[1] : null;
+
       if (videoLink.length == 11)
         videoLink = `https://www.youtube.com/watch?v=${videoLink}`;
-      room.playlist.push({ name: videoName, link: videoLink });
-      io.in(to).emit("room", room);
+      if (playlistName) {
+        const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistName}&key=${process.env.YOUTUBEAPI}`;
+
+        try {
+          const res = await axios.get(url);
+          const videos = res.data.items.map((item) => ({
+            name: item.snippet.title,
+            link: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+          }));
+          console.log(videos);
+          videos.forEach((el) => room.playlist.push(el));
+          io.in(to).emit("room", room);
+        } catch (e) {
+          console.log(e);
+        }
+      } else {
+        room.playlist.push({ name: videoName, link: videoLink });
+        io.in(to).emit("room", room);
+      }
     }
   });
 
+  socket.on(
+    "tracks:add",
+    asyncHandler(async ({ videos, to }) => {
+      let room = getRoomByName(to);
+      videos.forEach((el) => room.playlist.push(el));
+      io.in(to).emit("room", room);
+    })
+  );
   socket.on("volume:change", ({ volume, to }) => {
     socket.to(to).emit("volume:change", { volume });
   });
