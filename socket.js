@@ -64,34 +64,65 @@ io.on("connection", async (socket) => {
     }
   });
 
+  socket.on("playlist:get", async ({ phrase }) => {
+    // let room = getRoomByName(to);
+    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${phrase}&key=${process.env.YOUTUBEAPI}`;
+    try {
+      const res = await axios.get(url);
+      const videos = res.data.items.map((item) => ({
+        title: item.snippet.title,
+        id: item.snippet.resourceId.videoId,
+      }));
+      // console.log(videos);
+      socket.emit("search:youtube", { videos });
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+  socket.on("video:get", async ({ phrase }) => {
+    // let room = getRoomByName(to);
+    const url = `https://www.googleapis.com/youtube/v3/videos?id=${phrase}&key=${process.env.YOUTUBEAPI}&part=snippet`;
+    try {
+      const res = await axios.get(url);
+      const videos = res.data.items.map((item) => ({
+        title: item.snippet.title,
+        id: phrase,
+      }));
+      socket.emit("search:youtube", { videos });
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
   socket.on("track:add", async ({ video, videoName, to }) => {
     if (video) {
       let videoLink = video;
       let room = getRoomByName(to);
-      let match = videoLink.match(/&list=([^&]*)/);
-      let playlistName = match ? match[1] : null;
+      // let match = videoLink.match(/&list=([^&]*)/);
+      // let playlistName = match ? match[1] : null;
 
-      if (videoLink.length == 11)
-        videoLink = `https://www.youtube.com/watch?v=${videoLink}`;
-      if (playlistName) {
-        const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistName}&key=${process.env.YOUTUBEAPI}`;
+      // if (videoLink.length == 11)
+      //   videoLink = `https://www.youtube.com/watch?v=${videoLink}`;
+      // if (playlistName) {
+      //   const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistName}&key=${process.env.YOUTUBEAPI}`;
 
-        try {
-          const res = await axios.get(url);
-          const videos = res.data.items.map((item) => ({
-            name: item.snippet.title,
-            link: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
-          }));
-          console.log(videos);
-          videos.forEach((el) => room.playlist.push(el));
-          io.in(to).emit("room", room);
-        } catch (e) {
-          console.log(e);
-        }
-      } else {
-        room.playlist.push({ name: videoName, link: videoLink });
-        io.in(to).emit("room", room);
-      }
+      //   try {
+      //     const res = await axios.get(url);
+      //     const videos = res.data.items.map((item) => ({
+      //       name: item.snippet.title,
+      //       link: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+      //     }));
+      //     console.log(videos);
+      //     videos.forEach((el) => room.playlist.push(el));
+      //     io.in(to).emit("room", room);
+      //   } catch (e) {
+      //     console.log(e);
+      //   }
+      // } else {
+      room.playlist.push({ name: videoName, link: videoLink });
+      io.in(to).emit("room", room);
+      // }
     }
   });
 
