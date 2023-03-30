@@ -16,7 +16,7 @@ app.use(cors());
 // app.use(history());
 
 app.get("/", (req, res) => {
-  res.send("Hello world");
+  res.status(200);
 });
 app.use("/api/user", require("./models/user.routes"));
 
