@@ -18,6 +18,15 @@ function createOrJoinRoom(name) {
   return room;
 }
 
+function getPlaylist(name) {
+  let room = getRoomByName(name);
+  strippedPlaylist = room.playlist.map((el) => ({
+    name: el.name,
+    link: el.link,
+  }));
+  return room.playlist;
+}
+
 function addVideo({ roomName, videoLink }) {
   let room = getRoomByName(roomName);
   room.playlist.push(videoLink);

@@ -2,8 +2,6 @@ const express = require("express");
 const dotenv = require("dotenv");
 const io = require("./socket");
 const cors = require("cors");
-// const history = require("connect-history-api-fallback");
-const expressListRoutes = require("express-list-routes");
 
 const connectDB = require("./db.js");
 
@@ -13,14 +11,11 @@ connectDB();
 const app = express();
 app.use(express.json());
 app.use(cors());
-// app.use(history());
 
 app.get("/", (req, res) => {
   res.sendStatus(200);
 });
 app.use("/api/user", require("./models/user.routes"));
-
-// expressListRoutes(app);
 
 const port = 5000;
 const server = app.listen(port, () => {

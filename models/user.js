@@ -49,7 +49,7 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 };
 
 userSchema.methods.getSignedJwtToken = function () {
-  return jwt.sign({ id: this._id }, process.env.SECRET_KEY, {
+  return jwt.sign({ id: this._id, name: this.name }, process.env.SECRET_KEY, {
     expiresIn: process.env.JWT_EXPIRE,
   });
 };
