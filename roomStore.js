@@ -31,7 +31,6 @@ function getPlaylist(name) {
 
 function addVideo({ roomName, videoLink, addedBy }) {
   let room = getRoomByName(roomName);
-  console.log(videoLink);
   room.idIndex++;
   idIndex = room.idIndex;
   room.playlist.push({ ...videoLink, idIndex });

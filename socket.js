@@ -82,6 +82,25 @@ io.on("connection", async (socket) => {
     })
   );
 
+  socket.on("track:next", () => {
+    let room = getRoomByName(socket.room);
+    let nextvalue;
+    if (room.nextIndex) {
+      nextvalue = room.nextIndex;
+      room.nextIndex = null;
+    } else {
+      nextvalue = room.currentIndex + 1;
+    }
+    if (nextvalue >= room.playlist.length) {
+      room.currentIndex = 0;
+    } else {
+      room.currentIndex = nextvalue;
+    }
+    room.currentVideo = room.playlist[room.currentIndex];
+    socket.emit("track:switch", room);
+    socket.to(socket.room).emit("track:switch", room);
+  });
+
   socket.on(
     "playlist:get",
     asyncHandler(async ({ phrase }) => {
@@ -123,10 +142,9 @@ io.on("connection", async (socket) => {
           videoLink: video,
           addedBy: socket.name,
         });
-        // console.log(room.playlist[room.playlist.length - 1]);
         io.in(socket.room).emit("room", { ...room, guessGame: null });
       } catch (e) {
-        console.log(e);
+        console.error(e);
       }
     }
   );
@@ -148,7 +166,7 @@ io.on("connection", async (socket) => {
         const room = getRoomByName(socket.room);
         io.in(socket.room).emit("room", { ...room, guessGame: null });
       } catch (e) {
-        console.log(e);
+        console.error(e);
       }
     }
     // )
@@ -162,6 +180,10 @@ io.on("connection", async (socket) => {
   socket.on("track:remove", ({ index }) => {
     let room = getRoomByName(socket.room);
     // room.playlist = playlistData.playlist;
+    if (index == room.currentIndex) {
+      room.currentIndex -= 0.9;
+      room.nextIndex = index;
+    }
     room.playlist = room.playlist
       .slice(0, index)
       .concat(room.playlist.slice(index + 1));

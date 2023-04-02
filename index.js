@@ -25,6 +25,6 @@ const server = app.listen(port, () => {
 io.attach(server);
 
 process.on("unhandledRejection", (err, promise) => {
-  console.log(`Error: ${err.message}`);
+  console.error(`Error: ${err.message}`);
   server.close(() => process.exit(1));
 });
