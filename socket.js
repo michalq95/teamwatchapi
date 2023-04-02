@@ -5,6 +5,8 @@ const axios = require("axios");
 const { RateLimiterMemory } = require("rate-limiter-flexible");
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
+const { InMemorySessionStore } = require("./sessionStore");
+const sessionStore = new InMemorySessionStore();
 const User = require("./models/user");
 
 const rateLimiter = new RateLimiterMemory({
@@ -40,13 +42,32 @@ io.on("connection", async (socket) => {
   socket.join(socket.room);
   const createdRoom = createOrJoinRoom(socket.room);
   socket.emit("track:switch", createdRoom);
-  socket.to(socket.room).emit("newuserconnected", {
+
+  sessionStore.saveSession(socket.id, {
     username: socket.name,
+    room: socket.room,
+    connected: true,
   });
+  const users = [];
+  sessionStore.findAllSessions().forEach((session) => {
+    users.push({
+      username: session.name,
+      connected: session.connected,
+    });
+  });
+  socket.emit("users", users);
+
+  socket.broadcast.emit("user connected", {
+    username: socket.name,
+    connected: true,
+  });
+  // socket.to(socket.room).emit("newuserconnected", {
+  //   username: socket.name,
+  // });
 
   socket.on(
     "track:play",
-    asyncHandler(async (data) => {
+    asyncHandler(async () => {
       await rateLimiter.consume(socket.handshake.address);
       socket.to(socket.room).emit("track:play");
     })
@@ -54,7 +75,7 @@ io.on("connection", async (socket) => {
 
   socket.on(
     "track:pause",
-    asyncHandler(async (data) => {
+    asyncHandler(async () => {
       await rateLimiter.consume(socket.handshake.address);
       socket.to(socket.room).emit("track:pause");
     })
