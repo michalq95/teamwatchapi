@@ -110,28 +110,48 @@ io.on("connection", async (socket) => {
 
   socket.on(
     "track:add",
-    asyncHandler(async ({ video, videoName }) => {
-      let videoLink = video;
-      let room = getRoomByName(socket.room);
-      room.playlist.push({
-        name: videoName,
-        link: videoLink,
-        addedBy: socket.name,
-        triedToGuess: [],
-      });
-      console.log(room.playlist[room.playlist.length - 1]);
-      io.in(socket.room).emit("room", room);
-    })
+    // asyncHandler(
+    async (video) => {
+      // let room = getRoomByName(socket.room);
+      // room.playlist.push({
+      //   name: videoName,
+      //   link: videoLink,
+      // });
+      try {
+        let room = addVideo({
+          roomName: socket.room,
+          videoLink: video,
+          addedBy: socket.name,
+        });
+        // console.log(room.playlist[room.playlist.length - 1]);
+        io.in(socket.room).emit("room", { ...room, guessGame: null });
+      } catch (e) {
+        console.log(e);
+      }
+    }
   );
+  // )
   socket.on(
     "tracks:add",
-    asyncHandler(async ({ videos }) => {
-      let room = getRoomByName(socket.room);
-      videos.forEach((el) =>
-        room.playlist.push({ ...el, addedBy: socket.name, triedToGuess: [] })
-      );
-      io.in(socket.room).emit("room", room);
-    })
+    // asyncHandler(
+    async ({ videos }) => {
+      try {
+        // let room = getRoomByName(socket.room);
+        // videos.forEach((el) => room.playlist.push({ el }));
+        videos.forEach((el) =>
+          addVideo({
+            roomName: socket.room,
+            videoLink: el,
+            addedBy: socket.name,
+          })
+        );
+        const room = getRoomByName(socket.room);
+        io.in(socket.room).emit("room", { ...room, guessGame: null });
+      } catch (e) {
+        console.log(e);
+      }
+    }
+    // )
   );
   socket.on("volume:change", ({ volume }) => {
     socket.to(socket.room).emit("volume:change", { volume });
