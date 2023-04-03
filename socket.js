@@ -110,7 +110,6 @@ io.on("connection", async (socket) => {
 
   socket.on("track:next", () => {
     let room = getRoomByName(socket.room);
-<<<<<<< HEAD
     if (!room.recentTrackChange) {
       room.recentTrackChange = setTimeout(() => {
         room.recentTrackChange = null;
@@ -131,7 +130,6 @@ io.on("connection", async (socket) => {
       room.currentVideo = room.playlist[room.currentIndex];
       socket.emit("track:switch", toSend(room));
       socket.to(socket.room).emit("track:switch", toSend(room));
-
     }
   });
 
