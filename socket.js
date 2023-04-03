@@ -110,6 +110,7 @@ io.on("connection", async (socket) => {
 
   socket.on("track:next", () => {
     let room = getRoomByName(socket.room);
+<<<<<<< HEAD
     if (!room.recentTrackChange) {
       room.recentTrackChange = setTimeout(() => {
         room.recentTrackChange = null;
@@ -120,7 +121,7 @@ io.on("connection", async (socket) => {
         nextvalue = room.nextIndex;
         room.nextIndex = null;
       } else {
-        nextvalue = room.currentIndex + 1;
+        nextvalue = Math.round(room.currentIndex) + 1;
       }
       if (nextvalue >= room.playlist.length) {
         room.currentIndex = 0;
@@ -130,6 +131,7 @@ io.on("connection", async (socket) => {
       room.currentVideo = room.playlist[room.currentIndex];
       socket.emit("track:switch", toSend(room));
       socket.to(socket.room).emit("track:switch", toSend(room));
+
     }
   });
 

@@ -2,7 +2,6 @@ const express = require("express");
 const dotenv = require("dotenv");
 const io = require("./socket");
 const cors = require("cors");
-
 const connectDB = require("./db.js");
 
 dotenv.config({ path: "./config.env" });
