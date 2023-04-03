@@ -3,7 +3,6 @@ const dotenv = require("dotenv");
 const io = require("./socket");
 const cors = require("cors");
 // const history = require("connect-history-api-fallback");
-const expressListRoutes = require("express-list-routes");
 
 const connectDB = require("./db.js");
 
