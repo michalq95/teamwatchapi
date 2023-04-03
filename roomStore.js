@@ -8,8 +8,10 @@ function createOrJoinRoom(name) {
   let room = getRoomByName(name);
   if (!room) {
     room = {
+      idIndex: 0,
       name: name,
       playlist: [],
+      guessGame: [],
       currentVideo: {},
       currentIndex: 0,
     };
@@ -18,9 +20,21 @@ function createOrJoinRoom(name) {
   return room;
 }
 
-function addVideo({ roomName, videoLink }) {
+function getPlaylist(name) {
+  let room = getRoomByName(name);
+  strippedPlaylist = room.playlist.map((el) => ({
+    name: el.name,
+    link: el.link,
+  }));
+  return room.playlist;
+}
+
+function addVideo({ roomName, videoLink, addedBy }) {
   let room = getRoomByName(roomName);
-  room.playlist.push(videoLink);
+  room.idIndex++;
+  idIndex = room.idIndex;
+  room.playlist.push({ ...videoLink, idIndex });
+  room.guessGame.push({ idIndex, addedBy, attempts: [] });
   return room;
 }
 
@@ -28,4 +42,5 @@ module.exports = {
   getRoomByName,
   createOrJoinRoom,
   addVideo,
+  getPlaylist,
 };
