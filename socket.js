@@ -1,6 +1,11 @@
 const socketio = require("socket.io");
 const io = socketio({ cors: { origin: "*" } });
-const { getRoomByName, createOrJoinRoom, addVideo } = require("./roomStore");
+const {
+  getRoomByName,
+  createOrJoinRoom,
+  addVideo,
+  toSend,
+} = require("./roomStore");
 const axios = require("axios");
 const { RateLimiterMemory } = require("rate-limiter-flexible");
 const asyncHandler = require("express-async-handler");
@@ -95,9 +100,9 @@ io.on("connection", async (socket) => {
       }
 
       room.currentVideo = room.playlist[room.currentIndex];
-      socket.emit("track:switch", room);
 
-      socket.to(socket.room).emit("track:switch", room);
+      socket.emit("track:switch", toSend(room));
+      socket.to(socket.room).emit("track:switch", toSend(room));
 
       // socket.to(to).emit("track:switch", room);
     })
@@ -105,21 +110,27 @@ io.on("connection", async (socket) => {
 
   socket.on("track:next", () => {
     let room = getRoomByName(socket.room);
-    let nextvalue;
-    if (room.nextIndex) {
-      nextvalue = room.nextIndex;
-      room.nextIndex = null;
-    } else {
-      nextvalue = room.currentIndex + 1;
+    if (!room.recentTrackChange) {
+      room.recentTrackChange = setTimeout(() => {
+        room.recentTrackChange = null;
+      }, 1500);
+
+      let nextvalue;
+      if (room.nextIndex) {
+        nextvalue = room.nextIndex;
+        room.nextIndex = null;
+      } else {
+        nextvalue = room.currentIndex + 1;
+      }
+      if (nextvalue >= room.playlist.length) {
+        room.currentIndex = 0;
+      } else {
+        room.currentIndex = nextvalue;
+      }
+      room.currentVideo = room.playlist[room.currentIndex];
+      socket.emit("track:switch", toSend(room));
+      socket.to(socket.room).emit("track:switch", toSend(room));
     }
-    if (nextvalue >= room.playlist.length) {
-      room.currentIndex = 0;
-    } else {
-      room.currentIndex = nextvalue;
-    }
-    room.currentVideo = room.playlist[room.currentIndex];
-    socket.emit("track:switch", room);
-    socket.to(socket.room).emit("track:switch", room);
   });
 
   socket.on(
@@ -163,7 +174,7 @@ io.on("connection", async (socket) => {
           videoLink: video,
           addedBy: socket.name,
         });
-        io.in(socket.room).emit("room", { ...room, guessGame: null });
+        io.in(socket.room).emit("room", toSend(room));
       } catch (e) {
         console.error(e);
       }
@@ -175,8 +186,6 @@ io.on("connection", async (socket) => {
     // asyncHandler(
     async ({ videos }) => {
       try {
-        // let room = getRoomByName(socket.room);
-        // videos.forEach((el) => room.playlist.push({ el }));
         videos.forEach((el) =>
           addVideo({
             roomName: socket.room,
@@ -185,7 +194,7 @@ io.on("connection", async (socket) => {
           })
         );
         const room = getRoomByName(socket.room);
-        io.in(socket.room).emit("room", { ...room, guessGame: null });
+        io.in(socket.room).emit("room", toSend(room));
       } catch (e) {
         console.error(e);
       }
@@ -208,14 +217,14 @@ io.on("connection", async (socket) => {
     room.playlist = room.playlist
       .slice(0, index)
       .concat(room.playlist.slice(index + 1));
-    socket.emit("room", room);
-    socket.to(socket.room).emit("room", room);
+    socket.emit("room", toSend(room));
+    socket.to(socket.room).emit("room", toSend(room));
   });
   socket.on("room", async ({ playlistData }) => {
     let room = getRoomByName(socket.room);
     room.playlist = playlistData.playlist;
-    socket.emit("room", room);
-    socket.to(socket.room).emit("room", room);
+    socket.emit("room", toSend(room));
+    socket.to(socket.room).emit("room", toSend(room));
   });
 
   socket.on(

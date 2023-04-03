@@ -14,6 +14,7 @@ function createOrJoinRoom(name) {
       guessGame: [],
       currentVideo: {},
       currentIndex: 0,
+      recentTrackChange: null,
     };
     rooms.push(room);
   }
@@ -38,9 +39,18 @@ function addVideo({ roomName, videoLink, addedBy }) {
   return room;
 }
 
+function toSend(room) {
+  return {
+    ...room,
+    recentTrackChange: null,
+    guessGame: [],
+  };
+}
+
 module.exports = {
   getRoomByName,
   createOrJoinRoom,
   addVideo,
   getPlaylist,
+  toSend,
 };
