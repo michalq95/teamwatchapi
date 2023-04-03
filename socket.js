@@ -110,7 +110,7 @@ io.on("connection", async (socket) => {
       nextvalue = room.nextIndex;
       room.nextIndex = null;
     } else {
-      nextvalue = room.currentIndex + 1;
+      nextvalue = Math.round(room.currentIndex) + 1;
     }
     if (nextvalue >= room.playlist.length) {
       room.currentIndex = 0;
