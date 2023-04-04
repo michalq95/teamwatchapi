@@ -77,15 +77,14 @@ const sendTokenResponse = (user, statusCode, res) => {
     options.secure = true;
   }
 
-  res
-    .status(statusCode)
-    .cookie("token", token, options)
-    .json({
-      success: true,
-      user: {
-        name: user.name,
-        playlists: user.playlists,
-      },
-      token,
-    });
+  let usr = {
+    name: user.name,
+    playlists: user.playlists,
+  };
+  // console.log(usr);
+  res.status(statusCode).cookie("token", token, options).json({
+    success: true,
+    user: usr,
+    token,
+  });
 };
