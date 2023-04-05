@@ -42,8 +42,8 @@ function addVideo({ roomName, videoLink, addedBy }) {
 function toSend(room) {
   return {
     ...room,
-    recentTrackChange: null,
-    guessGame: [],
+    recentTrackChange: undefined,
+    guessGame: undefined,
   };
 }
 
