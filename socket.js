@@ -113,7 +113,7 @@ io.on("connection", async (socket) => {
     if (!room.recentTrackChange) {
       room.recentTrackChange = setTimeout(() => {
         room.recentTrackChange = null;
-      }, 1500);
+      }, 3000);
 
       let nextvalue;
       if (room.nextIndex) {
