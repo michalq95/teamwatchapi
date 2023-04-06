@@ -108,13 +108,10 @@ io.on("connection", async (socket) => {
     })
   );
 
-  socket.on("track:next", () => {
+  socket.on("track:next", ({ currentIdIndex }) => {
     let room = getRoomByName(socket.room);
-    if (!room.recentTrackChange) {
-      room.recentTrackChange = setTimeout(() => {
-        room.recentTrackChange = null;
-      }, 3000);
 
+    if (room.currentVideo.idIndex == currentIdIndex) {
       let nextvalue;
       if (room.nextIndex) {
         nextvalue = room.nextIndex;
