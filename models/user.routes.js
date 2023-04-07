@@ -7,35 +7,43 @@ const router = express.Router();
 router.post(
   "/register",
   asyncHandler(async (req, res, next) => {
-    const { name, email, password } = req.body;
-    const user = await User.create({
-      name,
-      email,
-      password,
-      playlists: [{ name: "default", playlist: [] }],
-    });
+    try {
+      const { name, email, password } = req.body;
+      const user = await User.create({
+        name,
+        email,
+        password,
+        playlists: [{ name: "default", playlist: [] }],
+      });
 
-    sendTokenResponse(user, 200, res);
+      sendTokenResponse(user, 200, res);
+    } catch (e) {
+      console.error(e);
+    }
   })
 );
 
 router.post(
   "/login",
   asyncHandler(async (req, res, next) => {
-    const { name, password } = req.body;
-    if (!name || !password) {
-      return next(res.status(400));
-    }
-    let user = await User.findOne({ name }).select("+password");
-    if (!user) {
-      return next(res.status(400));
-    }
+    try {
+      const { name, password } = req.body;
+      if (!name || !password) {
+        return next(res.status(400));
+      }
+      let user = await User.findOne({ name }).select("+password");
+      if (!user) {
+        return next(res.status(400));
+      }
 
-    const isMatch = await user.matchPassword(password);
-    if (!isMatch) {
-      return next(res.status(400));
+      const isMatch = await user.matchPassword(password);
+      if (!isMatch) {
+        return next(res.status(400));
+      }
+      sendTokenResponse(user, 200, res);
+    } catch (e) {
+      console.error(e);
     }
-    sendTokenResponse(user, 200, res);
   })
 );
 
@@ -44,21 +52,29 @@ router
   .get(
     protect,
     asyncHandler(async (req, res) => {
-      let user = await User.findById(req.user.id);
-      return res.status(200).json({ data: user.playlists });
+      try {
+        let user = await User.findById(req.user.id);
+        return res.status(200).json({ data: user.playlists });
+      } catch (e) {
+        console.error(e);
+      }
     })
   )
   .post(
     protect,
     asyncHandler(async (req, res, next) => {
-      // let user = await User.findById(req.user.id);
-      // if (!user) return res.status(404)
-      let user = await User.findByIdAndUpdate(
-        req.user.id,
-        { playlists: req.body },
-        { new: true, runValidators: true }
-      );
-      return res.status(200).json({ data: user.playlists });
+      try {
+        // let user = await User.findById(req.user.id);
+        // if (!user) return res.status(404)
+        let user = await User.findByIdAndUpdate(
+          req.user.id,
+          { playlists: req.body },
+          { new: true, runValidators: true }
+        );
+        return res.status(200).json({ data: user.playlists });
+      } catch (e) {
+        console.error(e);
+      }
     })
   );
 
