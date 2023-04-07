@@ -48,19 +48,19 @@ io.on("connection", async (socket) => {
   const createdRoom = createOrJoinRoom(socket.room);
   socket.emit("track:switch", toSend(createdRoom));
 
-  // sessionStore.saveSession(socket.id, {
-  //   username: socket.name,
-  //   room: socket.room,
-  //   connected: true,
-  // });
-  // const users = [];
-  // sessionStore.findAllSessions().forEach((session) => {
-  //   users.push({
-  //     username: session.name,
-  //     connected: session.connected,
-  //   });
-  // });
-  // socket.emit("users", users);
+  sessionStore.saveSession(socket.id, {
+    username: socket.name,
+    room: socket.room,
+    connected: true,
+  });
+  const users = [];
+  sessionStore.findAllSessions().forEach((session) => {
+    users.push({
+      username: session.name,
+      connected: session.connected,
+    });
+  });
+  socket.emit("users", users);
 
   socket.broadcast.emit("user connected", {
     username: socket.name,
@@ -108,34 +108,30 @@ io.on("connection", async (socket) => {
     })
   );
 
-  socket.on("track:next", (data) => {
-    if (data.currentIdIndex) {
-      try {
-        let currentIdIndex = data.currentIdIndex;
-        let room = getRoomByName(socket.room);
+  socket.on(
+    "track:next",
+    asyncHandler(({ currentIdIndex }) => {
+      let room = getRoomByName(socket.room);
 
-        if (room.currentVideo.idIndex == currentIdIndex) {
-          let nextvalue;
-          if (room.nextIndex) {
-            nextvalue = room.nextIndex;
-            room.nextIndex = null;
-          } else {
-            nextvalue = Math.round(room.currentIndex) + 1;
-          }
-          if (nextvalue >= room.playlist.length) {
-            room.currentIndex = 0;
-          } else {
-            room.currentIndex = nextvalue;
-          }
-          room.currentVideo = room.playlist[room.currentIndex];
-          socket.emit("track:switch", toSend(room));
-          socket.to(socket.room).emit("track:switch", toSend(room));
+      if (room.currentVideo.idIndex == currentIdIndex) {
+        let nextvalue;
+        if (room.nextIndex) {
+          nextvalue = room.nextIndex;
+          room.nextIndex = null;
+        } else {
+          nextvalue = Math.round(room.currentIndex) + 1;
         }
-      } catch (e) {
-        console.error(e);
+        if (nextvalue >= room.playlist.length) {
+          room.currentIndex = 0;
+        } else {
+          room.currentIndex = nextvalue;
+        }
+        room.currentVideo = room.playlist[room.currentIndex];
+        socket.emit("track:switch", toSend(room));
+        socket.to(socket.room).emit("track:switch", toSend(room));
       }
-    }
-  });
+    })
+  );
 
   socket.on(
     "playlist:get",
