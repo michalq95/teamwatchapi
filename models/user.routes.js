@@ -87,9 +87,5 @@ const sendTokenResponse = (user, statusCode, res) => {
   };
   console.log(payload);
 
-  res
-    .status(statusCode)
-    .set("transfer-encoding", "")
-    .cookie("token", token, options)
-    .json(payload);
+  res.status(statusCode).cookie("token", token, options).json(payload);
 };
