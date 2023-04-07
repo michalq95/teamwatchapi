@@ -108,30 +108,27 @@ io.on("connection", async (socket) => {
     })
   );
 
-  socket.on(
-    "track:next",
-    asyncHandler(({ currentIdIndex }) => {
-      let room = getRoomByName(socket.room);
+  socket.on("track:next", ({ currentIdIndex }) => {
+    let room = getRoomByName(socket.room);
 
-      if (room.currentVideo.idIndex == currentIdIndex) {
-        let nextvalue;
-        if (room.nextIndex) {
-          nextvalue = room.nextIndex;
-          room.nextIndex = null;
-        } else {
-          nextvalue = Math.round(room.currentIndex) + 1;
-        }
-        if (nextvalue >= room.playlist.length) {
-          room.currentIndex = 0;
-        } else {
-          room.currentIndex = nextvalue;
-        }
-        room.currentVideo = room.playlist[room.currentIndex];
-        socket.emit("track:switch", toSend(room));
-        socket.to(socket.room).emit("track:switch", toSend(room));
+    if (room.currentVideo.idIndex == currentIdIndex) {
+      let nextvalue;
+      if (room.nextIndex) {
+        nextvalue = room.nextIndex;
+        room.nextIndex = null;
+      } else {
+        nextvalue = Math.round(room.currentIndex) + 1;
       }
-    })
-  );
+      if (nextvalue >= room.playlist.length) {
+        room.currentIndex = 0;
+      } else {
+        room.currentIndex = nextvalue;
+      }
+      room.currentVideo = room.playlist[room.currentIndex];
+      socket.emit("track:switch", toSend(room));
+      socket.to(socket.room).emit("track:switch", toSend(room));
+    }
+  });
 
   socket.on(
     "playlist:get",
