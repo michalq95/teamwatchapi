@@ -46,7 +46,7 @@ io.on("connection", async (socket) => {
   console.log(`A ${socket.name} connected to ${socket.room}`);
   socket.join(socket.room);
   const createdRoom = createOrJoinRoom(socket.room);
-  socket.emit("track:switch", toSend(createdRoom));
+  socket.emit("track:switch", createdRoom);
 
   sessionStore.saveSession(socket.id, {
     username: socket.name,
