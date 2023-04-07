@@ -77,15 +77,15 @@ const sendTokenResponse = (user, statusCode, res) => {
     options.secure = true;
   }
 
-  const payload = {
-    success: true,
-    user: {
-      name: user.name,
-      // playlists: user.playlists,
-    },
-    token,
-  };
-  console.log(payload);
-
-  res.status(statusCode).cookie("token", token, options).json(payload);
+  res
+    .status(statusCode)
+    .cookie("token", token, options)
+    .json({
+      success: true,
+      user: {
+        name: user.name,
+        playlists: user.playlists,
+      },
+      token,
+    });
 };
