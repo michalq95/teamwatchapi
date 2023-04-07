@@ -7,43 +7,35 @@ const router = express.Router();
 router.post(
   "/register",
   asyncHandler(async (req, res, next) => {
-    try {
-      const { name, email, password } = req.body;
-      const user = await User.create({
-        name,
-        email,
-        password,
-        playlists: [{ name: "default", playlist: [] }],
-      });
+    const { name, email, password } = req.body;
+    const user = await User.create({
+      name,
+      email,
+      password,
+      playlists: [{ name: "default", playlist: [] }],
+    });
 
-      sendTokenResponse(user, 200, res);
-    } catch (e) {
-      console.error(e);
-    }
+    sendTokenResponse(user, 200, res);
   })
 );
 
 router.post(
   "/login",
   asyncHandler(async (req, res, next) => {
-    try {
-      const { name, password } = req.body;
-      if (!name || !password) {
-        return next(res.status(400));
-      }
-      let user = await User.findOne({ name }).select("+password");
-      if (!user) {
-        return next(res.status(400));
-      }
-
-      const isMatch = await user.matchPassword(password);
-      if (!isMatch) {
-        return next(res.status(400));
-      }
-      sendTokenResponse(user, 200, res);
-    } catch (e) {
-      console.error(e);
+    const { name, password } = req.body;
+    if (!name || !password) {
+      return next(res.status(400));
     }
+    let user = await User.findOne({ name }).select("+password");
+    if (!user) {
+      return next(res.status(400));
+    }
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return next(res.status(400));
+    }
+    sendTokenResponse(user, 200, res);
   })
 );
 
@@ -52,29 +44,21 @@ router
   .get(
     protect,
     asyncHandler(async (req, res) => {
-      try {
-        let user = await User.findById(req.user.id);
-        return res.status(200).json({ data: user.playlists });
-      } catch (e) {
-        console.error(e);
-      }
+      let user = await User.findById(req.user.id);
+      return res.status(200).json({ data: user.playlists });
     })
   )
   .post(
     protect,
     asyncHandler(async (req, res, next) => {
-      try {
-        // let user = await User.findById(req.user.id);
-        // if (!user) return res.status(404)
-        let user = await User.findByIdAndUpdate(
-          req.user.id,
-          { playlists: req.body },
-          { new: true, runValidators: true }
-        );
-        return res.status(200).json({ data: user.playlists });
-      } catch (e) {
-        console.error(e);
-      }
+      // let user = await User.findById(req.user.id);
+      // if (!user) return res.status(404)
+      let user = await User.findByIdAndUpdate(
+        req.user.id,
+        { playlists: req.body },
+        { new: true, runValidators: true }
+      );
+      return res.status(200).json({ data: user.playlists });
     })
   );
 
