@@ -35,7 +35,12 @@ function addVideo({ roomName, videoLink, addedBy }) {
   idIndex = room.idIndex;
   room.playlist.push({ ...videoLink, idIndex });
   room.guessGame.push({ idIndex, addedBy, attempts: [] });
+  console.log(room.playlist);
   return room;
+}
+
+function toSend(room) {
+  return { ...room, guessGame: undefined };
 }
 
 module.exports = {
@@ -43,4 +48,5 @@ module.exports = {
   createOrJoinRoom,
   addVideo,
   getPlaylist,
+  toSend,
 };

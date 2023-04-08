@@ -126,13 +126,17 @@ io.on("connection", async (socket) => {
   socket.on(
     "playlist:get",
     asyncHandler(async ({ phrase }) => {
-      const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${phrase}&key=${process.env.YOUTUBEAPI}`;
-      const res = await axios.get(url);
-      const videos = res.data.items.map((item) => ({
-        title: item.snippet.title,
-        id: item.snippet.resourceId.videoId,
-      }));
-      socket.emit("search:youtube", { videos });
+      try {
+        const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${phrase}&key=${process.env.YOUTUBEAPI}`;
+        const res = await axios.get(url);
+        const videos = res.data.items.map((item) => ({
+          title: item.snippet.title,
+          id: item.snippet.resourceId.videoId,
+        }));
+        socket.emit("search:youtube", { videos });
+      } catch (e) {
+        console.error(e);
+      }
     })
   );
 
