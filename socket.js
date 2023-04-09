@@ -137,9 +137,8 @@ io.on("connection", async (socket) => {
     }
   });
 
-  socket.on(
-    "playlist:get",
-    asyncHandler(async ({ phrase }) => {
+  socket.on("playlist:get", async ({ phrase }) => {
+    try {
       const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${phrase}&key=${process.env.YOUTUBEAPI}`;
       const res = await axios.get(url);
       const videos = res.data.items.map((item) => ({
@@ -147,12 +146,13 @@ io.on("connection", async (socket) => {
         id: item.snippet.resourceId.videoId,
       }));
       socket.emit("search:youtube", { videos });
-    })
-  );
+    } catch (e) {
+      console.error(e);
+    }
+  });
 
-  socket.on(
-    "video:get",
-    asyncHandler(async ({ phrase }) => {
+  socket.on("video:get", async ({ phrase }) => {
+    try {
       const url = `https://www.googleapis.com/youtube/v3/videos?id=${phrase}&key=${process.env.YOUTUBEAPI}&part=snippet`;
       const res = await axios.get(url);
       const videos = res.data.items.map((item) => ({
@@ -160,8 +160,10 @@ io.on("connection", async (socket) => {
         id: phrase,
       }));
       socket.emit("search:youtube", { videos });
-    })
-  );
+    } catch (e) {
+      console.error(e);
+    }
+  });
 
   socket.on(
     "track:add",
@@ -231,9 +233,8 @@ io.on("connection", async (socket) => {
     socket.to(socket.room).emit("room", toSend(room));
   });
 
-  socket.on(
-    "search:youtube",
-    asyncHandler(async ({ searchPhrase }) => {
+  socket.on("search:youtube", async ({ searchPhrase }) => {
+    try {
       const url = `https://www.googleapis.com/youtube/v3/search?maxResults=20&key=${process.env.YOUTUBEAPI}&q=${searchPhrase}&part=snippet&type=video`;
 
       const res = await axios.get(url);
@@ -242,8 +243,10 @@ io.on("connection", async (socket) => {
         title: item.snippet.title,
       }));
       socket.emit("search:youtube", { videos });
-    })
-  );
+    } catch (e) {
+      console.error(e);
+    }
+  });
 
   socket.on("disconnect", () => {
     console.log("disconnect");
