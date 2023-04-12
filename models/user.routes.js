@@ -2,6 +2,8 @@ const express = require("express");
 const User = require("../models/user.js");
 const asyncHandler = require("express-async-handler");
 const { protect } = require("./middleware");
+const { getRoomByName } = require("../roomStore");
+const bcrypt = require("bcrypt");
 
 const router = express.Router();
 router.post(
@@ -52,31 +54,34 @@ router
   .get(
     protect,
     asyncHandler(async (req, res) => {
-      try {
-        let user = await User.findById(req.user.id);
-        return res.status(200).json({ data: user.playlists });
-      } catch (e) {
-        console.error(e);
-      }
+      let user = await User.findById(req.user.id);
+      return res.status(200).json({ data: user.playlists });
     })
   )
   .post(
     protect,
     asyncHandler(async (req, res, next) => {
-      try {
-        // let user = await User.findById(req.user.id);
-        // if (!user) return res.status(404)
-        let user = await User.findByIdAndUpdate(
-          req.user.id,
-          { playlists: req.body },
-          { new: true, runValidators: true }
-        );
-        return res.status(200).json({ data: user.playlists });
-      } catch (e) {
-        console.error(e);
-      }
+      let user = await User.findByIdAndUpdate(
+        req.user.id,
+        { playlists: req.body },
+        { new: true, runValidators: true }
+      );
+      return res.status(200).json({ data: user.playlists });
     })
   );
+
+router.route("/room").post(
+  asyncHandler(async (req, res, next) => {
+    const room = getRoomByName(req.body.room);
+    const password = req.body.password;
+    if (!room) return res.status(200).json({ password });
+
+    if (await bcrypt.compare(password, room.password)) {
+      return res.status(200).json({ password });
+    }
+    return res.status(401);
+  })
+);
 
 module.exports = router;
 
@@ -97,7 +102,7 @@ const sendTokenResponse = (user, statusCode, res) => {
     success: true,
     user: {
       name: user.name,
-      // playlists: user.playlists,
+      playlists: user.playlists,
     },
     token,
   };

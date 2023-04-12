@@ -4,12 +4,13 @@ function getRoomByName(name) {
   return rooms.find((room) => room.name == name);
 }
 
-function createOrJoinRoom(name) {
+async function createOrJoinRoom(name, password) {
   let room = getRoomByName(name);
   if (!room) {
     room = {
       idIndex: 0,
       name: name,
+      password: password,
       playlist: [],
       guessGame: [],
       currentVideo: {},

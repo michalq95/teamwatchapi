@@ -21,6 +21,7 @@ const rateLimiter = new RateLimiterMemory({
 
 io.use(async (socket, next) => {
   socket.room = socket.handshake.auth.room;
+  socket.password = socket.handshake.auth.password;
   if (socket.handshake.auth.token) {
     const decodedToken = jwt.verify(
       socket.handshake.auth.token,
@@ -45,30 +46,35 @@ io.use(async (socket, next) => {
 io.on("connection", async (socket) => {
   console.log(`A ${socket.name} connected to ${socket.room}`);
   socket.join(socket.room);
-  const createdRoom = createOrJoinRoom(socket.room);
+  const password = "aaa";
+  const createdRoom = createOrJoinRoom(socket.room, socket.password);
+  if (!createdRoom) {
+    socket.emit("unauthorized");
+    socket.disconnect(true);
+  }
   socket.emit("track:switch", toSend(createdRoom));
 
-  // sessionStore.saveSession(socket.id, {
-  //   username: socket.name,
-  //   room: socket.room,
-  //   connected: true,
-  // });
-  // const users = [];
-  // sessionStore.findAllSessions().forEach((session) => {
-  //   users.push({
-  //     username: session.name,
-  //     connected: session.connected,
-  //   });
-  // });
-  // socket.emit("users", users);
+  sessionStore.saveSession(socket.id, {
+    username: socket.name,
+    room: socket.room,
+    connected: true,
+  });
+  const users = [];
+  sessionStore.findAllSessions().forEach((session) => {
+    users.push({
+      username: session.name,
+      connected: session.connected,
+    });
+  });
+  socket.emit("users", users);
 
   socket.broadcast.emit("user connected", {
     username: socket.name,
     connected: true,
   });
-  // socket.to(socket.room).emit("newuserconnected", {
-  //   username: socket.name,
-  // });
+  socket.to(socket.room).emit("newuserconnected", {
+    username: socket.name,
+  });
 
   socket.on(
     "track:play",
@@ -98,9 +104,7 @@ io.on("connection", async (socket) => {
       } else {
         room.currentIndex = playlistData.currentIndex;
       }
-
       room.currentVideo = room.playlist[room.currentIndex];
-
       socket.emit("track:switch", toSend(room));
       socket.to(socket.room).emit("track:switch", toSend(room));
 
@@ -120,7 +124,7 @@ io.on("connection", async (socket) => {
             nextvalue = room.nextIndex;
             room.nextIndex = null;
           } else {
-            nextvalue = Math.round(room.currentIndex) + 1;
+            nextvalue = Math.round(room.currentIndex + 1);
           }
           if (nextvalue >= room.playlist.length) {
             room.currentIndex = 0;
