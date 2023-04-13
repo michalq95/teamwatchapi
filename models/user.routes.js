@@ -72,11 +72,17 @@ router
 
 router.route("/room").post(
   asyncHandler(async (req, res, next) => {
+    console.log("room");
     const room = getRoomByName(req.body.room);
     const password = req.body.password;
-    if (!room) return res.status(200).json({ password });
+    if (!room) {
+      return res.status(200).json({ password });
+    }
+    console.log(password);
+    console.log(room.password);
 
-    if (await bcrypt.compare(password, room.password)) {
+    // const status = await bcrypt.compare(password, room.password);
+    if (password == room.password) {
       return res.status(200).json({ password });
     }
     return res.status(401);
