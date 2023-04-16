@@ -4,13 +4,23 @@ const io = require("./socket");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const connectDB = require("./db.js");
+const helmet = require("helmet");
 
 dotenv.config({ path: "./config.env" });
 connectDB();
 
 const app = express();
 // app.use(express.json());
-app.use(cors());
+// app.options(
+//   "*",
+//   cors({
+//     origin: true,
+//     credentials: true,
+//   })
+// );
+app.use(cors({ origin: true, credentials: true }));
+
+app.use(helmet());
 app.use(bodyParser.json());
 
 app.get("/", (req, res) => {

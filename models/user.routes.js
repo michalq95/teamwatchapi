@@ -8,21 +8,35 @@ const bcrypt = require("bcrypt");
 const router = express.Router();
 router.post(
   "/register",
-  asyncHandler(async (req, res, next) => {
+  // asyncHandler(async
+  async (req, res, next) => {
     try {
       const { name, email, password } = req.body;
-      const user = await User.create({
+      const user = new User({
         name,
         email,
         password,
         playlists: [{ name: "default", playlist: [] }],
       });
+      await user.save();
 
       sendTokenResponse(user, 200, res);
     } catch (e) {
-      console.error(e);
+      if (e.code == 11000) {
+        if ("name" in e.keyPattern) {
+          res.status(401).json({ success: false });
+          return;
+        }
+        if ("email" in e.keyPattern) {
+          res.status(403).json({ success: false });
+          return;
+        }
+      }
+      res.status(500).json({ success: false });
+      return;
     }
-  })
+  }
+  // )
 );
 
 router.post(
