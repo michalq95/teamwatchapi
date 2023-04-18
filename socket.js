@@ -13,6 +13,7 @@ const jwt = require("jsonwebtoken");
 const { InMemorySessionStore } = require("./sessionStore");
 const sessionStore = new InMemorySessionStore();
 const User = require("./models/user");
+const randomId = () => require("crypto").randomBytes(8).toString("hex");
 
 const rateLimiter = new RateLimiterMemory({
   points: 3, // 3 points
@@ -22,6 +23,14 @@ const rateLimiter = new RateLimiterMemory({
 io.use(async (socket, next) => {
   socket.room = socket.handshake.auth.room;
   socket.password = socket.handshake.auth.password;
+  const sessionID = socket.handshake.auth.sessionID;
+
+  if (sessionID) {
+    // let session = sessionStore.findSession(sessionID);
+    socket.sessionID = sessionID;
+  } else {
+    socket.sessionID = randomId();
+  }
   if (socket.handshake.auth.token) {
     const decodedToken = jwt.verify(
       socket.handshake.auth.token,
@@ -39,6 +48,7 @@ io.use(async (socket, next) => {
     }
     return next(new Error("invalid username"));
   }
+
   socket.name = name;
   next();
 });
@@ -46,26 +56,33 @@ io.use(async (socket, next) => {
 io.on("connection", async (socket) => {
   console.log(`A ${socket.name} connected to ${socket.room}`);
   socket.join(socket.room);
-  const password = "aaa";
   const createdRoom = createOrJoinRoom(socket.room, socket.password);
   if (!createdRoom) {
     socket.emit("unauthorized");
     socket.disconnect(true);
   }
   socket.emit("track:switch", toSend(createdRoom));
-
-  sessionStore.saveSession(socket.id, {
-    username: socket.name,
-    room: socket.room,
-    connected: true,
+  socket.emit("session", {
+    sessionID: socket.sessionID,
   });
-  const users = [];
-  sessionStore.findAllSessions().forEach((session) => {
-    users.push({
-      username: session.name,
-      connected: session.connected,
+  if (!sessionStore.findSession(socket.sessionID)) {
+    sessionStore.saveSession(socket.sessionID, {
+      username: socket.name,
+      room: socket.room,
+      connected: true,
     });
-  });
+  }
+  const users = [];
+  console.log(sessionStore);
+  sessionStore
+    .findAllSessions()
+    .filter((el) => el.room == socket.room && el.connected == true)
+    .forEach((session) => {
+      users.push({
+        username: session.username,
+        connected: session.connected,
+      });
+    });
   socket.emit("users", users);
 
   socket.broadcast.emit("user connected", {
@@ -249,6 +266,16 @@ io.on("connection", async (socket) => {
       socket.emit("search:youtube", { videos });
     } catch (e) {
       console.error(e);
+    }
+  });
+  socket.on("guessGame", ({ trackID, guess }) => {
+    const room = getRoomByName(socket.room);
+    const thevideo = room.guessGame.find((el) => el.idIndex == trackID);
+    if (!thevideo.attempts.includes(socket.sessionID)) {
+      thevideo.attempts.push(socket.sessionID);
+
+      socket.emit("guessGame", { correct: guess == thevideo.addedBy });
+    } else {
     }
   });
 

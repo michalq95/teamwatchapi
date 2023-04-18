@@ -45,6 +45,7 @@ function toSend(room) {
     ...room,
     recentTrackChange: undefined,
     guessGame: undefined,
+    password: undefined,
   };
 }
 
