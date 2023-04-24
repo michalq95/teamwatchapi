@@ -26,7 +26,6 @@ io.use(async (socket, next) => {
   const sessionID = socket.handshake.auth.sessionID;
 
   if (sessionID) {
-    // let session = sessionStore.findSession(sessionID);
     socket.sessionID = sessionID;
   } else {
     socket.sessionID = randomId();
@@ -73,7 +72,6 @@ io.on("connection", async (socket) => {
     });
   }
   const users = [];
-  console.log(sessionStore);
   sessionStore
     .findAllSessions()
     .filter((el) => el.room == socket.room && el.connected == true)
@@ -84,7 +82,6 @@ io.on("connection", async (socket) => {
       });
     });
   socket.emit("users", users);
-
   socket.broadcast.emit("user connected", {
     username: socket.name,
     connected: true,
@@ -279,8 +276,9 @@ io.on("connection", async (socket) => {
     }
   });
 
-  socket.on("disconnect", () => {
-    console.log("disconnect");
+  socket.on("disconnect", async () => {
+    const matchingSockets = await io.in(socket.sessionID).allSockets();
+    socket.removeAllListeners();
   });
 });
 
