@@ -56,10 +56,11 @@ io.on("connection", async (socket) => {
   console.log(`A ${socket.name} connected to ${socket.room}`);
   socket.join(socket.room);
   let createdRoom = await createOrJoinRoom(socket.room, socket.password);
-  if (!createdRoom) {
-    socket.emit("unauthorized");
-    socket.disconnect(true);
-  }
+  // if (!createdRoom) {
+  //   socket.emit("unauthorized");
+  //   socket.disconnect(true);
+  // }
+  console.log(createdRoom);
   socket.emit("room", toSend(createdRoom));
   socket.emit("session", {
     sessionID: socket.sessionID,
