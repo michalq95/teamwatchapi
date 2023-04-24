@@ -86,7 +86,6 @@ router
 
 router.route("/room").post(
   asyncHandler(async (req, res, next) => {
-    console.log("room");
     const room = getRoomByName(req.body.room);
     const password = req.body.password;
     if (!room) {
