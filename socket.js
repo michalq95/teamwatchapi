@@ -60,7 +60,6 @@ io.on("connection", async (socket) => {
     socket.emit("unauthorized");
     socket.disconnect(true);
   }
-  console.log(createdRoom);
   socket.emit("room", toSend(createdRoom));
   socket.emit("session", {
     sessionID: socket.sessionID,
