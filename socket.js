@@ -35,8 +35,14 @@ io.use(async (socket, next) => {
       socket.handshake.auth.token,
       process.env.SECRET_KEY
     );
-    socket.name = decodedToken.name;
-    return next();
+    if (decodedToken) {
+      socket.name = decodedToken.name;
+      return next();
+    } else {
+      socket.emit("forcelogout");
+      socket.disconnect();
+      return;
+    }
   }
 
   const name = socket.handshake.auth.name;
