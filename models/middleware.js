@@ -21,7 +21,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
     req.user = await User.findById(decodedToken.id);
     return next();
   } catch (err) {
-    res.status(401).json({ message: "Not authorized" });
-    return next();
+    console.log(err);
+    return res.status(401).json({ message: "Not authorized" });
   }
 });
