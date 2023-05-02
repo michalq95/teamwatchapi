@@ -246,7 +246,9 @@ io.on("connection", async (socket) => {
   });
   socket.on("room", async ({ playlistData }) => {
     let room = getRoomByName(socket.room);
+
     room.playlist = playlistData.playlist;
+    room.currentIndex = playlistData.currentIndex;
     socket.emit("room", toSend(room));
     socket.to(socket.room).emit("room", toSend(room));
   });
