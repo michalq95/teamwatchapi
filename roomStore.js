@@ -19,6 +19,7 @@ async function createOrJoinRoom(name, password) {
     };
     rooms.push(room);
   }
+
   return room;
 }
 
