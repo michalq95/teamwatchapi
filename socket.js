@@ -161,6 +161,29 @@ io.on("connection", async (socket) => {
     }
   });
 
+  socket.on("playlistvideo:get", async ({ phrase, phrase2 }) => {
+    try {
+      const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${phrase}&key=${process.env.YOUTUBEAPI}`;
+      const res = await axios.get(url, { validateStatus: false });
+      const videos = res?.data?.items?.map((item) => ({
+        title: item.snippet.title,
+        id: item.snippet.resourceId.videoId,
+      }));
+      const url2 = `https://www.googleapis.com/youtube/v3/videos?id=${phrase2}&key=${process.env.YOUTUBEAPI}&part=snippet`;
+      const res2 = await axios.get(url2);
+      const videos2 = res2.data.items.map((item) => ({
+        title: item.snippet.title,
+        id: phrase2,
+      }));
+      let vid = [];
+      if (videos2) vid = vid.concat(videos2);
+      if (videos) vid = vid.concat(videos);
+      socket.emit("search:youtube", { videos: vid });
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
   socket.on("playlist:get", async ({ phrase }) => {
     try {
       const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${phrase}&key=${process.env.YOUTUBEAPI}`;
@@ -169,6 +192,7 @@ io.on("connection", async (socket) => {
         title: item.snippet.title,
         id: item.snippet.resourceId.videoId,
       }));
+
       socket.emit("search:youtube", { videos });
     } catch (e) {
       console.error(e);
