@@ -39,29 +39,28 @@ router.post(
   // )
 );
 
-router.post(
-  "/login",
-  asyncHandler(async (req, res, next) => {
-    try {
-      const { name, password } = req.body;
-      if (!name || !password) {
-        return next(res.status(400));
-      }
-      let user = await User.findOne({ name }).select("+password");
-      if (!user) {
-        return next(res.status(400));
-      }
-
-      const isMatch = await user.matchPassword(password);
-      if (!isMatch) {
-        return next(res.status(400));
-      }
-      sendTokenResponse(user, 200, res);
-    } catch (e) {
-      console.error(e);
+router.post("/login", async (req, res, next) => {
+  try {
+    const { name, password } = req.body;
+    if (!name || !password) {
+      return res.status(400).send("Name and password are required.");
     }
-  })
-);
+    let user = await User.findOne({ name: name }).select("+password");
+    console.log(user);
+    if (!user) {
+      return res.status(400).send("Invalid name or password.");
+    }
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(400).send("Invalid name or password.");
+    }
+    sendTokenResponse(user, 200, res);
+  } catch (e) {
+    console.error(e);
+    next(e);
+  }
+});
 
 router
   .route("/library")
@@ -105,9 +104,7 @@ module.exports = router;
 const sendTokenResponse = (user, statusCode, res) => {
   const token = user.getSignedJwtToken();
   const options = {
-    expiresIn: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRE * 9999 * 24 * 60 * 60 * 1000
-    ),
+    expiresIn: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRE),
     httpOnly: true,
   };
 
@@ -125,5 +122,5 @@ const sendTokenResponse = (user, statusCode, res) => {
     token,
   };
 
-  res.status(statusCode).cookie("token", token, options).json(payload);
+  return res.status(statusCode).cookie("token", token, options).json(payload);
 };
