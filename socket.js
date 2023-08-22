@@ -30,20 +30,27 @@ io.use(async (socket, next) => {
   } else {
     socket.sessionID = randomId();
   }
-  if (socket.handshake.auth.token) {
-    const decodedToken = jwt.verify(
-      socket.handshake.auth.token,
-      process.env.SECRET_KEY
-    );
-    if (decodedToken) {
-      socket.name = decodedToken.name;
-      return next();
-    } else {
-      socket.emit("forcelogout");
-      socket.disconnect();
-      return;
-    }
-  }
+  // next();
+  // if (socket.handshake.auth.token) {
+  //   let decodedToken;
+  //   try {
+  //     decodedToken = jwt.verify(
+  //       socket.handshake.auth.token,
+  //       process.env.SECRET_KEY
+  //     );
+  //   } catch (err) {
+  //     console.log("should logout");
+  //     socket.emit("forcelogout");
+  //     // socket.disconnect();
+  //     return;
+  //   }
+  //   if (decodedToken) {
+  //     socket.name = decodedToken.name;
+  //     return next();
+  //   } else {
+  //     next();
+  //   }
+  // }
 
   const name = socket.handshake.auth.name;
   if (!name) {

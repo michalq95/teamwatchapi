@@ -18,10 +18,15 @@ exports.protect = asyncHandler(async (req, res, next) => {
   // console.log(token);
   try {
     const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
+    console.log("jwt verify");
     req.user = await User.findById(decodedToken.id);
     return next();
   } catch (err) {
-    console.log(err);
-    return res.status(401).json({ message: "Not authorized" });
+    if (err.name === "TokenExpiredError") {
+      return res.status(403).json({ message: "Token has expired" });
+    } else {
+      console.error(err);
+      return res.status(401).json({ message: "Not authorized" });
+    }
   }
 });
