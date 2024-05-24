@@ -91,8 +91,7 @@ router.route("/room").post(
       return res.status(200).json({ password });
     }
 
-    // const status = await bcrypt.compare(password, room.password);
-    if (password == room.password) {
+    if (!room.password || password == room.password) {
       return res.status(200).json({ password });
     }
     return res.status(401);
